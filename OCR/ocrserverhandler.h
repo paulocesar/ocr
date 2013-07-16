@@ -12,7 +12,7 @@ public:
     explicit OCRServerHandler(QTcpSocket *);
 
 private slots:
-    void process();
+    void interpret();
 
 private:
     QTcpSocket *_clientSocket;

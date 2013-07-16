@@ -4,11 +4,12 @@
 OCRServerHandler::OCRServerHandler(QTcpSocket *sock)
 {
     _clientSocket = sock;
-    connect(_clientSocket,SIGNAL(readyRead()),this,SLOT(process()));
+    connect(_clientSocket,SIGNAL(readyRead()),this,SLOT(interpret()));
     connect(_clientSocket, SIGNAL(disconnected()),_clientSocket,SLOT(deleteLater()));
 }
 
-void OCRServerHandler::process() {
+void OCRServerHandler::interpret()
+{
     QDataStream ds(_clientSocket);
     QString cmd;
     ds >> cmd;
