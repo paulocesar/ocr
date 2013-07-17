@@ -14,15 +14,10 @@ public:
     explicit OCRServerHandler(QTcpSocket *);
 
 private:
-    void download(QString url);
-
-signals:
-    void done();
+    QString interpret(QString &command);
 
 private slots:
-    void interpret();
-    void downloadFinished(QNetworkReply* data);
-    void downloadProgress(qint64 received, qint64 total);
+    void receiveData();
 
 private:
     QTcpSocket *_clientSocket;

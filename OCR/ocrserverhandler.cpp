@@ -1,50 +1,62 @@
 #include "ocrserverhandler.h"
 #include <QtNetwork>
+#include <QStringList>
+#include "ocrlog.h"
+#include "ocr.h"
 
 OCRServerHandler::OCRServerHandler(QTcpSocket *sock)
 {
     _clientSocket = sock;
-    connect(_clientSocket,SIGNAL(readyRead()),this,SLOT(interpret()));
+    connect(_clientSocket,SIGNAL(readyRead()),this,SLOT(receiveData()));
     connect(_clientSocket, SIGNAL(disconnected()),_clientSocket,SLOT(deleteLater()));
 }
 
-
-void OCRServerHandler::interpret()
+void OCRServerHandler::receiveData()
 {
     QDataStream ds(_clientSocket);
-    QString cmd;
-    ds >> cmd;
-    qDebug() << cmd;
-    ds << cmd;
-    _clientSocket->waitForBytesWritten(1000);
-    _clientSocket->disconnectFromHost();
+    QString data;
+
+    ds >> data;
+    ds << this->interpret(data);
+
+//    _clientSocket->waitForBytesWritten(1000);
+//    _clientSocket->disconnectFromHost();
 //    _clientSocket->close();
 //    this->~OCRServerHandler();
+    if(data == "quit") {
+        _clientSocket->waitForBytesWritten(1000);
+        _clientSocket->disconnectFromHost();
+        delete this;
+    }
 }
 
-void OCRServerHandler::download(QString url)
-{
-    QUrl qurl = QUrl::fromEncoded(url.toLocal8Bit());
-    QNetworkRequest request(qurl);
-    QObject::connect(_manager.get(request),SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(downloadProgress(qint64,qint64)));
-}
+QString OCRServerHandler::interpret(QString &command) {
 
-void OCRServerHandler::downloadFinished(QNetworkReply* data)
-{
-    //TODO: set path and to downloaded files and no override
-    QFile localFile("localfile");
-    if (!localFile.open(QIODevice::WriteOnly))
-        return;
+    //check if is a valid command
+    if(!(QRegExp("^(add\\||remove\\||page\\||info\\|)[\\w\\d./:+-_\\|]*$").indexIn(command)!= -1))
+        return "fail";
 
-    const QByteArray sdata = data->readAll();
-    localFile.write(sdata);
-    qDebug() << sdata;
-    localFile.close();
+    QStringList cmd = command.split("|");
 
-    emit done();
-}
+    if(cmd[0] == "add")
+    {
+        OCRLog::put("adding document...");
+    }
 
-void OCRServerHandler::downloadProgress(qint64 received, qint64 total)
-{
-    qDebug() << received << total;
+    else if (cmd[0] == "remove")
+    {
+
+    }
+
+    else if (cmd[0] == "page")
+    {
+
+    }
+
+    else if (cmd[0] == "info")
+    {
+
+    }
+
+    return "ok";
 }

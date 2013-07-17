@@ -33,9 +33,6 @@ protected:
 private slots:
     static void update();
 
-
-
-
 protected:
     explicit OCR(QObject *parent = 0);
     QString getDocumentId();

@@ -136,19 +136,23 @@ void OCR::stop()
     sStarted = false;
 }
 
-QString OCR::documentAdd(QString filename)
+QString OCR::documentAdd(QString url)
 {
+    //create documentId
     QMap<QString, OCRDocument *>::iterator i;
-    QString code = "";
-
+    QString documentId = "";
     do {
-        code = "asjdas8"+QString::number(++_sId);
-        code = QString(QCryptographicHash::hash(code.toStdString().c_str(),QCryptographicHash::Md5).toHex());
-        i = _sDocuments.find(code);
+        documentId = "asjdas8"+QString::number(++_sId);
+        documentId = QString(QCryptographicHash::hash(documentId.toStdString().c_str(),QCryptographicHash::Md5).toHex());
+        i = _sDocuments.find(documentId);
     } while(i != _sDocuments.end());
 
-    _sDocuments.insert(code,new OCRDocument(filename));
-    return code;
+    //create document and download it
+    OCRDocument *newDoc = new OCRDocument(documentId,url);
+    _sDocuments.insert(documentId,newDoc);
+
+    //return documentId to client
+    return documentId;
 }
 
 bool OCR::documentRemove(QString documentId)
