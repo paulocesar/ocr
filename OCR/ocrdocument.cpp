@@ -1,11 +1,23 @@
 #include "ocrdocument.h"
 
+#include <QCryptographicHash>
+#include <QDir>
 #include <QFile>
 #include <QDebug>
 #include "ocrlog.h"
 #include "ocrexception.h"
 
+
 QMap<QString,OCRDocument *> OCRDocument::_sDocuments;
+QList<OCRProcessor *> OCRDocument::_sProcessors;
+bool OCRDocument::_sStarted = false;
+int OCRDocument::_sId = 0;
+QTimer OCRDocument::_sTimer;
+
+/**
+ * !!!! _sSingleton HAVE TO be called after OCRDocument::_sTimer
+ */
+OCRTimerResponse OCRTimerResponse::_sSingleton;
 
 OCRDocument::OCRDocument(QString documentId, QString url, QObject *parent) :
     QObject(parent)
@@ -33,6 +45,11 @@ void OCRDocument::setNumberOfPages(int pages)
         throw new OCRException("cannot set empty number of pages");
 }
 
+int OCRDocument::getNumberOfPages()
+{
+    return _numberOfPages;
+}
+
 void OCRDocument::setNextProcessedPage(QString content)
 {
     if(this->is(OCRDocument::STATUS_COMPLETE))
@@ -50,28 +67,35 @@ void OCRDocument::setNextProcessedPage(QString content)
         this->setStatus(OCRDocument::STATUS_COMPLETE);
 }
 
+int OCRDocument::getNextUnprocessedPage()
+{
+    if(_numberOfPages > _pagesProcessed.length())
+        return _pagesProcessed.length();
+    return -1;
+}
+
 
 //======================DOWNLOAD=FILE========================
 
 
 void OCRDocument::downloaded(QNetworkReply* data)
 {
-    QString path(getFilename());
-    QFile localFile(path);
-//    if (!localFile.open(QIODevice::WriteOnly))
-//        return;
+    //http://www.tcpdf.org/examples/example_001.pdf
 
+    QString path("downloads/"+getFilename());
+    QFile file(path);
+    file.open(QIODevice::WriteOnly);
     const QByteArray sdata = data->readAll();
-    localFile.write(sdata);
-    qDebug() << sdata;
-    localFile.close();
+    file.write(sdata);
+    file.close();
 
     this->setStatus(OCRDocument::STATUS_FREE);
 }
 
 void OCRDocument::downloadProgress(qint64 received, qint64 total)
 {
-    qDebug() << received << total;
+    int f = (float) received/total * 100;
+    qDebug() << QString::number(f)+"%";
 }
 
 
@@ -91,6 +115,21 @@ QString OCRDocument::getUrl()
 QString OCRDocument::getFilename()
 {
     return getId() + "." + getFormat();
+}
+
+QString OCRDocument::getPathAndFilename()
+{
+    return QCoreApplication::applicationDirPath() + "/downloads/" + getFilename();
+}
+
+QString OCRDocument::getPathAndPage(int page)
+{
+    return QCoreApplication::applicationDirPath() + "/downloads/page_" + QString::number(page) + "_" + getId() + ".jpg";
+}
+
+QString OCRDocument::getPathAndText(int page)
+{
+    return QCoreApplication::applicationDirPath() + "/downloads/text_" + QString::number(page) + "_" + getId() + ".txt";
 }
 
 
@@ -144,38 +183,127 @@ bool OCRDocument::isFree() {
 
 //============DOCUMENT=ACCESS=INTERFACE=========
 
-void OCRDocument::startup(int limitOcrs)
+void OCRDocument::startup(int limitProcessors, int updateTime)
 {
+    if(_sStarted)
+    {
+        OCRLog::put("OCR is already started");
+        return ;
+    }
 
+    if(limitProcessors < 1)
+        throw new OCRException("OCR needs 1 processor at least");
+
+    QDir(QCoreApplication::applicationDirPath()+"/downloads").removeRecursively();
+    QDir().mkdir(QCoreApplication::applicationDirPath()+"/downloads");
+
+    OCRLog::put("Starting OCR instance...");
+    for(int i = 0; i < limitProcessors; i++)
+    {
+        _sProcessors.push_back(new OCRProcessor);
+    }
+
+    _sStarted = true;
+    _sTimer.start(updateTime);
 }
 
 void OCRDocument::update()
 {
+    if(!_sStarted)
+    {
+        throw new OCRException("OCR is not started");
+        return ;
+    }
 
+    OCRLog::put("updating data...");
+    foreach(OCRProcessor *processor, _sProcessors)
+    {
+        if(processor->isFree())
+        {
+            OCRDocument *document = getNextFreeDocument();
+            if(document)
+                processor->process(document);
+        }
+    }
+}
+
+
+OCRDocument* OCRDocument::getNextFreeDocument()
+{
+    foreach(OCRDocument *document, _sDocuments)
+    {
+        if(document->isFree())
+            return document;
+    }
+    return 0;
 }
 
 void OCRDocument::stop()
 {
+    if(!_sStarted)
+    {
+        OCRLog::put("OCR is already stopped");
+        return ;
+    }
 
+    _sTimer.stop();
+
+    foreach(OCRProcessor *processor, _sProcessors)
+    {
+        processor->waitForFinished(-1);
+        delete processor;
+    }
+    _sProcessors.clear();
+
+    _sStarted = false;
 }
 
 
-QString OCRDocument::documentAdd(QString filename)
+QString OCRDocument::documentAdd(QString url)
 {
+    //create documentId
+    IT_DOC i;
+    QString documentId = "";
+    do
+    {
+        documentId = "asjdas8"+QString::number(++_sId);
+        documentId = QString(QCryptographicHash::hash(documentId.toStdString().c_str(),QCryptographicHash::Md5).toHex());
+        i = _sDocuments.find(documentId);
+    }
+    while(i != _sDocuments.end());
 
+    //create document and download it
+    OCRDocument *newDoc = new OCRDocument(documentId,url);
+    _sDocuments.insert(documentId,newDoc);
+
+    //return documentId to client
+    return documentId;
 }
 
 bool OCRDocument::documentRemove(QString documentId)
 {
+    IT_DOC i = _sDocuments.find(documentId);
+    if(i != _sDocuments.end())
+    {
+        delete i.value();
+        _sDocuments.erase(i);
+    }
 
+    return false;
 }
 
 QString OCRDocument::documentPage(QString documentId, int page)
 {
-
+    IT_DOC i = _sDocuments.find(documentId);
+    if(i != _sDocuments.end())
+        return i.value()->getPage(page);
+    return "";
 }
 
 QString OCRDocument::documentInfo(QString documentId)
 {
-
+    IT_DOC i = _sDocuments.find(documentId);
+    if(i != _sDocuments.end())
+        return i.value()->getInfo();
+    return "";
 }

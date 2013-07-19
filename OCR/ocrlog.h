@@ -7,8 +7,13 @@
 class OCRLog
 {
 public:
+
     static void put(const char * message);
     static void put(QString message);
+
+    static void warning(const char * message);
+    static void warning(QString message);
+
 private:
     OCRLog();
 };

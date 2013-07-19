@@ -18,15 +18,15 @@ TEMPLATE = app
 SOURCES += main.cpp \
     ocrserver.cpp \
     ocrserverhandler.cpp \
-    ocr.cpp \
     ocrdocument.cpp \
     ocrexception.cpp \
-    ocrlog.cpp
+    ocrlog.cpp \
+    ocrprocessor.cpp
 
 HEADERS += \
     ocrserver.h \
     ocrserverhandler.h \
-    ocr.h \
     ocrdocument.h \
     ocrexception.h \
-    ocrlog.h
+    ocrlog.h \
+    ocrprocessor.h
