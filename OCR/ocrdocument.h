@@ -19,6 +19,7 @@ class OCRDocument : public QObject
 {
     Q_OBJECT
 public:
+
     enum Status {
         STATUS_DOWNLOADING = 1,
         STATUS_FREE = 2,
@@ -56,6 +57,7 @@ public:
     QString getPathAndFilename();
     QString getPathAndPage(int page = 0);
     QString getPathAndText(int page = 0);
+    QString getPathAndTextTesseract(int page = 0);
     QString getFormat();
     QString getPage(int number);
     QString getInfo();
@@ -73,6 +75,8 @@ private slots:
     void downloadProgress (qint64 received, qint64 total);
 
 private:
+    static QString PATH_FILES;
+
     QString _documentId;
     QString _format;
     QString _url;

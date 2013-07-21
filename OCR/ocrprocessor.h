@@ -12,9 +12,7 @@ public:
 
     enum Status {
         STATUS_IDLE = 1,
-        STATUS_CONVERTING = 2,
-        STATUS_PROCESSING = 4,
-        STATUS_READING = 8
+        STATUS_PROCESSING = 2
     };
 
     //status
@@ -35,13 +33,13 @@ private slots:
     bool updateState(int exitCode = 0);
 
 private:
-    void convertToImage();
-    void convertToText();
-    void readFromFiles();
+//    void convertToImage();
+//    void convertToText();
+//    void readFromFiles();
 
     QString cmdConvert(QString orig,QString dest);
     QString cmdTesseract(QString orig,QString dest);
-    QString cmdIdentify(QString orig);
+    QString cmdPDFNumberPages(QString orig);
 
 private:
     OCRProcessor::Status _status;

@@ -19,6 +19,8 @@ QTimer OCRDocument::_sTimer;
  */
 OCRTimerResponse OCRTimerResponse::_sSingleton;
 
+QString OCRDocument::PATH_FILES = "";
+
 OCRDocument::OCRDocument(QString documentId, QString url, QObject *parent) :
     QObject(parent)
 {
@@ -82,7 +84,7 @@ void OCRDocument::downloaded(QNetworkReply* data)
 {
     //http://www.tcpdf.org/examples/example_001.pdf
 
-    QString path("downloads/"+getFilename());
+    QString path(OCRDocument::PATH_FILES + getFilename());
     QFile file(path);
     file.open(QIODevice::WriteOnly);
     const QByteArray sdata = data->readAll();
@@ -95,7 +97,7 @@ void OCRDocument::downloaded(QNetworkReply* data)
 void OCRDocument::downloadProgress(qint64 received, qint64 total)
 {
     int f = (float) received/total * 100;
-    qDebug() << QString::number(f)+"%";
+    OCRLog::put(getId() + " download: " + QString::number(f)+"%");
 }
 
 
@@ -119,17 +121,22 @@ QString OCRDocument::getFilename()
 
 QString OCRDocument::getPathAndFilename()
 {
-    return QCoreApplication::applicationDirPath() + "/downloads/" + getFilename();
+    return OCRDocument::PATH_FILES + getFilename();
 }
 
 QString OCRDocument::getPathAndPage(int page)
 {
-    return QCoreApplication::applicationDirPath() + "/downloads/page_" + QString::number(page) + "_" + getId() + ".jpg";
+    return OCRDocument::PATH_FILES + "page_" + QString::number(page) + "_" + getId() + ".png";
+}
+
+QString OCRDocument::getPathAndTextTesseract(int page)
+{
+    return OCRDocument::PATH_FILES + "text_" + QString::number(page) + "_" + getId();
 }
 
 QString OCRDocument::getPathAndText(int page)
 {
-    return QCoreApplication::applicationDirPath() + "/downloads/text_" + QString::number(page) + "_" + getId() + ".txt";
+    return OCRDocument::PATH_FILES + "text_" + QString::number(page) + "_" + getId() + ".txt";
 }
 
 
@@ -191,11 +198,14 @@ void OCRDocument::startup(int limitProcessors, int updateTime)
         return ;
     }
 
+    if(PATH_FILES == "")
+        PATH_FILES = QCoreApplication::applicationDirPath() + "/files/";
+
     if(limitProcessors < 1)
         throw new OCRException("OCR needs 1 processor at least");
 
-    QDir(QCoreApplication::applicationDirPath()+"/downloads").removeRecursively();
-    QDir().mkdir(QCoreApplication::applicationDirPath()+"/downloads");
+    QDir(OCRDocument::PATH_FILES).removeRecursively();
+    QDir().mkdir(OCRDocument::PATH_FILES);
 
     OCRLog::put("Starting OCR instance...");
     for(int i = 0; i < limitProcessors; i++)
