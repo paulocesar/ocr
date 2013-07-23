@@ -53,14 +53,14 @@ bool OCRProcessor::updateState(int exitCode)
         _status = OCRProcessor::STATUS_PROCESSING;
         _document->setStatus(OCRDocument::STATUS_CONVERTING);
 
-        int pages = 3;
+        int pages = 1;
 
         if(_document->getFormat() == "pdf")
         {
             /**
-              * ERROR TODO: fix identify bug
-              * SOLUTION: find 'Type/Page>>' inside pdf
+              * IMPORTANT: this method is not 100% reliable
               */
+            pages = _document->getPathAndFilename();
         }
 
         _document->setNumberOfPages(pages);
@@ -129,4 +129,33 @@ QString OCRProcessor::cmdTesseract(QString orig,QString dest)
 QString OCRProcessor::cmdPDFNumberPages(QString orig)
 {
     return "pdftk "+orig+" dump_data";
+}
+
+int OCRProcessor::countPDFPage(QString path)
+{
+    QFile file(path);
+    QRegExp re("Type/Page\/" , Qt::CaseInsensitive);
+    QRegExp re2("\\Count" , Qt::CaseInsensitive);
+    QString line;
+    int resultsPages = 0;
+    int resultsCounts = 0;
+
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qDebug() << "File not found";
+        return 0;
+    }
+
+    QTextStream in(&file);
+    while (!in.atEnd())
+    {
+        line = in.readLine();
+        if(re.indexIn(line) != -1)
+            resultsPages++;
+        if(re2.indexIn(line) != -1)
+            resultsCounts++;
+    }
+
+    if(resultsPages)
+        return resultsPages;
+    return resultsCounts;
 }

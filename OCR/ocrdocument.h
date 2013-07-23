@@ -64,6 +64,7 @@ public:
     int getCompletePercent();
     int getLastPageReady();
 
+    //constructor
     OCRDocument(QString documentId, QString url, QObject *parent = 0);
 
 protected:

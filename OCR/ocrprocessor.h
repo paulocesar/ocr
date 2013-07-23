@@ -33,13 +33,16 @@ private slots:
     bool updateState(int exitCode = 0);
 
 private:
-//    void convertToImage();
-//    void convertToText();
-//    void readFromFiles();
-
     QString cmdConvert(QString orig,QString dest);
     QString cmdTesseract(QString orig,QString dest);
     QString cmdPDFNumberPages(QString orig);
+
+    /**
+      * IMPORTANT: this method is not 100% reliable
+      * it counts PDF pages trying to find "Type/Page" and "\Count" patterns
+      * it needs more validation tests
+      */
+    int countPDFPage(QString path);
 
 private:
     OCRProcessor::Status _status;
