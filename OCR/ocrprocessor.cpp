@@ -3,6 +3,7 @@
 #include "ocrdocument.h"
 #include "ocrlog.h"
 
+#include <QTextStream>
 #include <QFile>
 
 OCRProcessor::OCRProcessor(QObject *parent) :
@@ -60,7 +61,7 @@ bool OCRProcessor::updateState(int exitCode)
             /**
               * IMPORTANT: this method is not 100% reliable
               */
-            pages = _document->getPathAndFilename();
+            pages = cmdPDFNumberPages(_document->getPathAndFilename());
         }
 
         _document->setNumberOfPages(pages);
@@ -80,6 +81,11 @@ bool OCRProcessor::updateState(int exitCode)
         OCRLog::put("processor using ocr....");
         QString cmd = cmdTesseract(_document->getPathAndPage(page),_document->getPathAndTextTesseract(page));
         _document->setStatus(OCRDocument::STATUS_READING);
+        if(_document->getFormat() == "png")
+        {
+            updateState(0);
+            return true;
+        }
         start(cmd);
     }
 
@@ -126,14 +132,9 @@ QString OCRProcessor::cmdTesseract(QString orig,QString dest)
     return "tesseract " + orig + " " + dest;
 }
 
-QString OCRProcessor::cmdPDFNumberPages(QString orig)
+int OCRProcessor::cmdPDFNumberPages(QString orig)
 {
-    return "pdftk "+orig+" dump_data";
-}
-
-int OCRProcessor::countPDFPage(QString path)
-{
-    QFile file(path);
+    QFile file(orig);
     QRegExp re("Type/Page\/" , Qt::CaseInsensitive);
     QRegExp re2("\\Count" , Qt::CaseInsensitive);
     QString line;
@@ -141,7 +142,6 @@ int OCRProcessor::countPDFPage(QString path)
     int resultsCounts = 0;
 
     if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qDebug() << "File not found";
         return 0;
     }
 

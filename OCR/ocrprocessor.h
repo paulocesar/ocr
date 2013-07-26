@@ -35,14 +35,13 @@ private slots:
 private:
     QString cmdConvert(QString orig,QString dest);
     QString cmdTesseract(QString orig,QString dest);
-    QString cmdPDFNumberPages(QString orig);
 
     /**
       * IMPORTANT: this method is not 100% reliable
       * it counts PDF pages trying to find "Type/Page" and "\Count" patterns
       * it needs more validation tests
       */
-    int countPDFPage(QString path);
+    int cmdPDFNumberPages(QString orig);
 
 private:
     OCRProcessor::Status _status;

@@ -30,8 +30,11 @@ OCRDocument::OCRDocument(QString documentId, QString url, QObject *parent) :
 
     _url = url;
 
-    //TODO: capture format
-    _format = "pdf";
+    //capture document format
+    QRegExp format("[.][0-9a-z-A-Z]*");
+    _format = format.capturedTexts().at(0);
+    if(_format == "")
+        _format = "pdf";
 
     QUrl qurl = QUrl::fromEncoded(getUrl().toLocal8Bit());
     QNetworkRequest request(qurl);
