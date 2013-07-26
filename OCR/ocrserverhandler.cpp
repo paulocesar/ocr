@@ -23,12 +23,10 @@ void OCRServerHandler::receiveData()
 
 QString OCRServerHandler::interpret(QString &command)
 {
-
     /**
       * TODO: fix command validation and split
       */
-
-    //check if is a valid command
+    //check if it is a valid command structure
     if(!(QRegExp("^(add\\||remove\\||page\\||info\\||quit\\|)[\\w\\d./:+-_\\|]*$").indexIn(command)!= -1))
         return "fail";
 
@@ -63,7 +61,7 @@ QString OCRServerHandler::interpret(QString &command)
 
     else if (cmd[0] == "quit")
     {
-        OCRLog::put("closing socket handler: " + cmd[1]);
+        OCRLog::put("closing socket handler");
         _clientSocket->waitForBytesWritten(1000);
         _clientSocket->disconnectFromHost();
         _clientSocket->close();

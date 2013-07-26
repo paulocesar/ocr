@@ -300,6 +300,7 @@ bool OCRDocument::documentRemove(QString documentId)
     {
         delete i.value();
         _sDocuments.erase(i);
+        return true;
     }
 
     return false;
@@ -309,7 +310,9 @@ QString OCRDocument::documentPage(QString documentId, int page)
 {
     IT_DOC i = _sDocuments.find(documentId);
     if(i != _sDocuments.end())
+    {
         return i.value()->getPage(page);
+    }
     return "";
 }
 
