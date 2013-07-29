@@ -66,6 +66,8 @@ public:
 
     //constructor
     OCRDocument(QString documentId, QString url, QObject *parent = 0);
+    //descructor
+    ~OCRDocument();
 
 protected:
     static void update();

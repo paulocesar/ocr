@@ -42,6 +42,14 @@ OCRDocument::OCRDocument(QString documentId, QString url, QObject *parent) :
     connect(&_manager,SIGNAL(finished(QNetworkReply*)),this,SLOT(downloaded(QNetworkReply*)));
 }
 
+OCRDocument::~OCRDocument()
+{
+    /**
+      * TODO: remove local documents in folder "files"
+      */
+
+}
+
 void OCRDocument::setNumberOfPages(int pages)
 {
     if(pages > 0)
@@ -156,7 +164,7 @@ QString OCRDocument::getPage(int number)
 }
 
 QString OCRDocument::getInfo() {
-    return "hello world";
+    return QString::number(_status) + "|" + QString::number(_pagesProcessed.size()) + "|" + QString::number(_numberOfPages);
 }
 
 int OCRDocument::getCompletePercent()
@@ -238,6 +246,7 @@ void OCRDocument::update()
                 processor->process(document);
         }
     }
+
 }
 
 
