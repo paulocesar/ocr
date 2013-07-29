@@ -56,7 +56,9 @@ QString OCRServerHandler::interpret(QString &command)
     else if (cmd[0] == "info")
     {
         OCRLog::put("sending document info: " + cmd[1]);
-        return OCRDocument::documentInfo(cmd[1]);
+        QString result = OCRDocument::documentInfo(cmd[1]);
+        if(result != "")
+            return result;
     }
 
     else if (cmd[0] == "quit")
