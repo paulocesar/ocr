@@ -47,7 +47,19 @@ OCRDocument::~OCRDocument()
     /**
       * TODO: remove local documents in folder "files"
       */
+    QRegExp re(".*"+getId());
+    QDir dir = QDir(OCRDocument::PATH_FILES);
+    dir.setFilter(QDir::Files | QDir::NoSymLinks);
 
+    QFileInfoList list = dir.entryInfoList();
+    for(int i = 0; i < list.size(); ++i)
+    {
+        QFileInfo fileInfo = list.at(i);
+        if(re.indexIn(fileInfo.fileName()) != -1) {
+            OCRLog::put("removing file: " + fileInfo.fileName());
+            QFile::remove(OCRDocument::PATH_FILES + fileInfo.fileName());
+        }
+    }
 }
 
 void OCRDocument::setNumberOfPages(int pages)
