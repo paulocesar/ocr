@@ -8,7 +8,9 @@ using namespace std;
 OCRServer::OCRServer()
 {
     _tcpServer = new QTcpServer(this);
-    if(!_tcpServer->listen(QHostAddress::Any,6666))
+    int PORT = 6666;
+    cout << "creating server on port " << PORT << endl;
+    if(!_tcpServer->listen(QHostAddress::Any,PORT))
         cout << "Unable to start the server." <<endl;
 
     OCRDocument::startup();
