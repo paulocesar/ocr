@@ -5,7 +5,7 @@ OCR Qt C++ server using tesseract. It can process PDF and some kind of images th
 
 ### Installation
 
-Just install **Tesseract** and **ImageMagick (convert)** command line tools. Then compile the OCR using **Qt Creator**. To test the system, use the **OCR Client** (https://github.com/paulocesar/ocr-client).
+Just install **Tesseract** and **ImageMagick (convert)** command line tools. Then compile the OCR using **Qt Creator**. To test the system, use the **OCR Client** (<https://github.com/paulocesar/ocr-client>).
 
 ### Commands
 
